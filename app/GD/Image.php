@@ -48,6 +48,9 @@ class Image implements JsAccessible
         $image=new Image($gd);
         return $image;
     }
+    public static function fromFile($file){
+        return self::fromString(Base::readFile(Base::res($file,'image')));
+    }
 
     private function getColor(Color $color){
         return imagecolorallocatealpha($this->gd, $color->red, $color->green, $color->blue, $color->alpha);
@@ -86,9 +89,20 @@ class Image implements JsAccessible
         imagedestroy($this->gd);
         $this->gd=$image->gd;
     }
-    public function drawImage(Image $image, Box $from, Box $to, $alpha = 0)
+    public function attachImage(Image $image, $from, $to, $alpha = 0){
+        $result = $this->drawImage($image, $from, $to, $alpha);
+        $image->destroy();
+        return $result;
+    }
+    public function drawImage(Image $image, $from, $to, $alpha = 0)
     {
         $image = clone $image;
+        if($from instanceof Point){
+            $from=new Box($from,new Vector($image->getWidth(),$image->getHeight()));
+        }
+        if($to instanceof Point){
+            $to=new Box($to,new Vector($image->getWidth(),$image->getHeight()));
+        }
         imagealphablending($image->gd, false);
         $w = $image->getWidth();
         $h = $image->getHeight();
@@ -105,9 +119,9 @@ class Image implements JsAccessible
                 $color_xy = imagecolorat($image->gd, $x, $y);
                 $per_alpha = ($color_xy >> 24) & 0xFF;
                 if( $min_alpha !== 127 ){
-                    $per_alpha = 127 + $alpha * ( $per_alpha - 127 ) / ( 127 - $min_alpha );
+                    $per_alpha = 127 + (127-$alpha) * ( $per_alpha - 127 ) / ( 127 - $min_alpha );
                 } else {
-                    $per_alpha = $alpha;
+                    $per_alpha = 127-$alpha;
                 }
                 $alpha_color_xy = imagecolorallocatealpha($image->gd, ($color_xy >> 16) & 0xFF, ($color_xy >> 8) & 0xFF, $color_xy & 0xFF, $per_alpha);
                 if (!imagesetpixel($image->gd, $x, $y, $alpha_color_xy)) {
@@ -135,7 +149,7 @@ class Image implements JsAccessible
             $ny = $y;
             $isf = true;
             foreach ($raws as $raw) {
-                if (@Base::color_code(substr($raw, 0, 1)) && !$isf) {
+                if (!$isf && Base::color_code(substr($raw, 0, 1))) {
                     $color_code = Base::color_code(substr($raw, 0, 1));
                     $color_now = $this->getColor(new Color(
                         Base::code_color($color_code)[0],

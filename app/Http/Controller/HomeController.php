@@ -15,6 +15,7 @@ use App\GD\Draw;
 use App\Model\Data\GoodsData;
 use Swoft;
 use Swoft\Http\Message\ContentType;
+use Swoft\Http\Message\Request;
 use Swoft\Http\Message\Response;
 use Swoft\Http\Server\Annotation\Mapping\Controller;
 use Swoft\Http\Server\Annotation\Mapping\RequestMapping;
@@ -33,13 +34,13 @@ class HomeController
      * @RequestMapping("/")
      * @throws Throwable
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Swoft\Log\Helper\Log::info(Base::res('main.json','default'));
         $content = (new Draw(
             Swoft\Co::readFile(Base::res('main.json','default')),
             substr(Swoft\Co::readFile(Base::res('main.php','default')),5),
-            []
+            $request->getParsedQuery()
         ))->main();
         return context()->getResponse()->withContentType('image/png')->withContent($content);
     }

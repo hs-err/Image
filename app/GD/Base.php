@@ -55,7 +55,7 @@ class Base
             'white' => 'f',
             'r' => 'white'
         ];
-        return $color_code[$color];
+        return @$color_code[$color]?:null;
     }
 
     public static function code_color($color)

@@ -10,6 +10,7 @@ class DMI implements JsAccessible
 {
     /** @var Image $main */
     public $main;
+    public $input;
 
     public function res($file,$type){
         return Base::res($file,$type);

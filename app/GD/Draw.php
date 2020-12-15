@@ -21,10 +21,11 @@ class Draw
         $this->main = Image::fromString(Base::readFile(Base::res($this->draw['background'], 'image')));
         $dmi=new DMI();
         $dmi->main=$this->main;
+        $dmi->input=(Object) $this->input;
         $script=$this->script;
         (function()use($dmi,$script){
             eval($script);
         })->call($this);
-        return $this->main->getAsString();
+        return $dmi->main->getAsString();
     }
 }
